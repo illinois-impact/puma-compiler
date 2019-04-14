@@ -1,0 +1,10 @@
+*.o
+*.so
+*.test
+.*.swp
+*.dot
+*.pdf
+*.puma
+*.puma.py
+*.graph
+*.out
