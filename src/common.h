@@ -13,8 +13,9 @@
 
 /* Constants */
 #define MVMU_DIM                        128
-#define N_CONSTANT_MVMUS_PER_CORE       6
-#define N_TRAINING_MVMUS_PER_CORE       2
+#define N_CONSTANT_MVMUS_PER_CORE       2
+#define N_TRAINING_MVMUS_PER_CORE       0
+#define MIN_N_TILE                      0
 #define N_CORES_PER_TILE                8
 #define MAX_LOAD_STORE_WIDTH            16
 #define MAX_SEND_RECV_WIDTH             16
@@ -104,4 +105,3 @@ class CodeGenerator;
 class ModelInstanceImpl;
 
 #endif
-

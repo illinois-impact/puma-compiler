@@ -31,25 +31,31 @@ void CodeGenerator::codegen() {
 
     // TODO: Define ABI for laying out the binary
 
-    for(unsigned int pTile = 0; pTile < placer_->getNPTiles(); ++pTile) {
+    unsigned int nTile = placer_->getNPTiles();
+    if (nTile < MIN_N_TILE)
+        nTile = MIN_N_TILE;
+
+    for(unsigned int pTile = 0; pTile < nTile; ++pTile) {
 
         // Generate code for the tile
         std::stringstream fileName;
         fileName << model_->getName() << "-tile" << pTile << ".puma";
         std::ofstream tileCode;
         tileCode.open(fileName.str());
-        std::list<TileOperation*>& tileOperationList = linearizer_->getTileOperationList(pTile);
-        for(TileOperation* tileOp : tileOperationList) {
-            if(SendOperation* send = dynamic_cast<SendOperation*>(tileOp)) {
-                tileCode << codegen(send);
-            } else if(ReceiveOperation* recv = dynamic_cast<ReceiveOperation*>(tileOp)) {
-                tileCode << codegen(recv);
-            } else if(WriteInputOperation* write = dynamic_cast<WriteInputOperation*>(tileOp)) {
-                tileCode << codegen(write);
-            } else if(ReadOutputOperation* read = dynamic_cast<ReadOutputOperation*>(tileOp)) {
-                tileCode << codegen(read);
-            } else {
-                assert(0 && "Unsupported operation for code generation!");
+        if (pTile < placer_->getNPTiles()) {
+            std::list<TileOperation*>& tileOperationList = linearizer_->getTileOperationList(pTile);
+            for(TileOperation* tileOp : tileOperationList) {
+                if(SendOperation* send = dynamic_cast<SendOperation*>(tileOp)) {
+                    tileCode << codegen(send);
+                } else if(ReceiveOperation* recv = dynamic_cast<ReceiveOperation*>(tileOp)) {
+                    tileCode << codegen(recv);
+                } else if(WriteInputOperation* write = dynamic_cast<WriteInputOperation*>(tileOp)) {
+                    tileCode << codegen(write);
+                } else if(ReadOutputOperation* read = dynamic_cast<ReadOutputOperation*>(tileOp)) {
+                    tileCode << codegen(read);
+                } else {
+                    assert(0 && "Unsupported operation for code generation!");
+                }
             }
         }
         tileCode << "halt()" << std::endl;
@@ -61,24 +67,26 @@ void CodeGenerator::codegen() {
             fileName << model_->getName() << "-tile" << pTile << "-core" << pCore << ".puma";
             std::ofstream coreCode;
             coreCode.open(fileName.str());
-            std::list<CoreOperation*>& coreOperationList = linearizer_->getCoreOperationList(pTile, pCore);
-            for(CoreOperation* coreOp : coreOperationList) {
-                if(MVMOperation* mvm = dynamic_cast<MVMOperation*>(coreOp)) {
-                    coreCode << codegen(mvm);
-                } else if(TrainingMatrixOperation* trainOp = dynamic_cast<TrainingMatrixOperation*>(coreOp)) {
-                    coreCode << codegen(trainOp);
-                } else if(ALUVectorOperation* aluOp = dynamic_cast<ALUVectorOperation*>(coreOp)) {
-                    coreCode << codegen(aluOp);
-                } else if(SetImmediateOperation* seti = dynamic_cast<SetImmediateOperation*>(coreOp)) {
-                    coreCode << codegen(seti);
-                } else if(CopyOperation* copy = dynamic_cast<CopyOperation*>(coreOp)) {
-                    coreCode << codegen(copy);
-                } else if(LoadOperation* load = dynamic_cast<LoadOperation*>(coreOp)) {
-                    coreCode << codegen(load);
-                } else if(StoreOperation* store = dynamic_cast<StoreOperation*>(coreOp)) {
-                    coreCode << codegen(store);
-                } else {
-                    assert(0 && "Unsupported operation for code generation!");
+            if (pTile < placer_->getNPTiles()) {
+                std::list<CoreOperation*>& coreOperationList = linearizer_->getCoreOperationList(pTile, pCore);
+                for(CoreOperation* coreOp : coreOperationList) {
+                    if(MVMOperation* mvm = dynamic_cast<MVMOperation*>(coreOp)) {
+                        coreCode << codegen(mvm);
+                    } else if(TrainingMatrixOperation* trainOp = dynamic_cast<TrainingMatrixOperation*>(coreOp)) {
+                        coreCode << codegen(trainOp);
+                    } else if(ALUVectorOperation* aluOp = dynamic_cast<ALUVectorOperation*>(coreOp)) {
+                        coreCode << codegen(aluOp);
+                    } else if(SetImmediateOperation* seti = dynamic_cast<SetImmediateOperation*>(coreOp)) {
+                        coreCode << codegen(seti);
+                    } else if(CopyOperation* copy = dynamic_cast<CopyOperation*>(coreOp)) {
+                        coreCode << codegen(copy);
+                    } else if(LoadOperation* load = dynamic_cast<LoadOperation*>(coreOp)) {
+                        coreCode << codegen(load);
+                    } else if(StoreOperation* store = dynamic_cast<StoreOperation*>(coreOp)) {
+                        coreCode << codegen(store);
+                    } else {
+                        assert(0 && "Unsupported operation for code generation!");
+                    }
                 }
             }
             coreCode << "hlt()" << std::endl;
